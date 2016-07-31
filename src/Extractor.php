@@ -28,7 +28,10 @@ class Extractor implements ExtractorInterface
     {
         $geometry = $this->tryConvertToArray($geometry);
 
-        if (!isset($geometry['type'])) {
+        if (
+            !is_array($geometry) ||
+            !isset($geometry['type'])
+        ) {
             throw InvalidGeometryException::create(
                 $geometry
             );
@@ -128,6 +131,10 @@ class Extractor implements ExtractorInterface
     {
         $geometry = $this->tryConvertToArray($geometry);
 
+        if (!is_array($geometry)) {
+            return null;
+        }
+
         if (isset($geometry['crs']['properties']['name'])) {
             return CRS\def_to_srid($geometry['crs']['properties']['name']);
         }
@@ -144,6 +151,7 @@ class Extractor implements ExtractorInterface
         $point = $this->tryConvertToArray($point);
 
         if (
+            !is_array($point) ||
             !isset($point['coordinates']) ||
             !is_array($point['coordinates'])
         ) {
@@ -174,6 +182,7 @@ class Extractor implements ExtractorInterface
         $lineString = $this->tryConvertToArray($lineString);
 
         if (
+            !is_array($lineString) ||
             !isset($lineString['coordinates']) ||
             !is_array($lineString['coordinates'])
         ) {
@@ -196,6 +205,7 @@ class Extractor implements ExtractorInterface
         $polygon = $this->tryConvertToArray($polygon);
 
         if (
+            !is_array($polygon) ||
             !isset($polygon['coordinates']) ||
             !is_array($polygon['coordinates'])
         ) {
@@ -218,6 +228,7 @@ class Extractor implements ExtractorInterface
         $multiPoint = $this->tryConvertToArray($multiPoint);
 
         if (
+            !is_array($multiPoint) ||
             !isset($multiPoint['coordinates']) ||
             !is_array($multiPoint['coordinates'])
         ) {
@@ -240,6 +251,7 @@ class Extractor implements ExtractorInterface
         $multiLineString = $this->tryConvertToArray($multiLineString);
 
         if (
+            !is_array($multiLineString) ||
             !isset($multiLineString['coordinates']) ||
             !is_array($multiLineString['coordinates'])
         ) {
@@ -262,6 +274,7 @@ class Extractor implements ExtractorInterface
         $multiPolygon = $this->tryConvertToArray($multiPolygon);
 
         if (
+            !is_array($multiPolygon) ||
             !isset($multiPolygon['coordinates']) ||
             !is_array($multiPolygon['coordinates'])
         ) {
@@ -284,6 +297,7 @@ class Extractor implements ExtractorInterface
         $geometryCollection = $this->tryConvertToArray($geometryCollection);
 
         if (
+            !is_array($geometryCollection) ||
             !isset($geometryCollection['geometries']) ||
             !is_array($geometryCollection['geometries'])
         ) {
