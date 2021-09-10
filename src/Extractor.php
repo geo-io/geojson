@@ -2,16 +2,20 @@
 
 namespace GeoIO\GeoJSON;
 
+use GeoIO\Coordinates;
 use GeoIO\CRS;
 use GeoIO\Dimension;
 use GeoIO\Extractor as ExtractorInterface;
 use GeoIO\GeoJSON\Exception\InvalidGeometryException;
+use GeoIO\GeometryType;
+use JsonSerializable;
+use Throwable;
 
 class Extractor implements ExtractorInterface
 {
-    public function supports($geometry)
+    public function supports(mixed $geometry): bool
     {
-        $geometry = $this->tryConvertToArray($geometry);
+        $geometry = $this->convertToArray($geometry);
 
         if (!is_array($geometry)) {
             return false;
@@ -24,9 +28,9 @@ class Extractor implements ExtractorInterface
         return true;
     }
 
-    public function extractType($geometry)
+    public function extractType(mixed $geometry): string
     {
-        $geometry = $this->tryConvertToArray($geometry);
+        $geometry = $this->convertToArray($geometry);
 
         if (
             !is_array($geometry) ||
@@ -37,80 +41,40 @@ class Extractor implements ExtractorInterface
             );
         }
 
-        switch (strtolower($geometry['type'])) {
-            case 'point':
-                return ExtractorInterface::TYPE_POINT;
-            case 'linestring':
-                return ExtractorInterface::TYPE_LINESTRING;
-            case 'polygon':
-                return ExtractorInterface::TYPE_POLYGON;
-            case 'multipoint':
-                return ExtractorInterface::TYPE_MULTIPOINT;
-            case 'multilinestring':
-                return ExtractorInterface::TYPE_MULTILINESTRING;
-            case 'multipolygon':
-                return ExtractorInterface::TYPE_MULTIPOLYGON;
-            case 'geometrycollection':
-                return ExtractorInterface::TYPE_GEOMETRYCOLLECTION;
-            default:
-                throw InvalidGeometryException::create($geometry);
-        }
+        return match (strtolower($geometry['type'])) {
+            'point' => GeometryType::POINT,
+            'linestring' => GeometryType::LINESTRING,
+            'polygon' => GeometryType::POLYGON,
+            'multipoint' => GeometryType::MULTIPOINT,
+            'multilinestring' => GeometryType::MULTILINESTRING,
+            'multipolygon' => GeometryType::MULTIPOLYGON,
+            'geometrycollection' => GeometryType::GEOMETRYCOLLECTION,
+            default => throw InvalidGeometryException::create($geometry),
+        };
     }
 
-    public function extractDimension($geometry)
+    public function extractDimension(mixed $geometry): string
     {
-        $geometry = $this->tryConvertToArray($geometry);
+        $geometry = $this->convertToArray($geometry);
 
-        switch ($this->extractType($geometry)) {
-            case ExtractorInterface::TYPE_POINT:
-                if (!isset($geometry['coordinates'][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
+        $type = $this->extractType($geometry);
 
-                $coordinates = $geometry['coordinates'];
-                break;
-            case ExtractorInterface::TYPE_LINESTRING:
-                if (!isset($geometry['coordinates'][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
-
-                $coordinates = $geometry['coordinates'][0];
-                break;
-            case ExtractorInterface::TYPE_POLYGON:
-                if (!isset($geometry['coordinates'][0][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
-
-                $coordinates = $geometry['coordinates'][0][0];
-                break;
-            case ExtractorInterface::TYPE_MULTIPOINT:
-                if (!isset($geometry['coordinates'][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
-
-                $coordinates = $geometry['coordinates'][0];
-                break;
-            case ExtractorInterface::TYPE_MULTILINESTRING:
-                if (!isset($geometry['coordinates'][0][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
-
-                $coordinates = $geometry['coordinates'][0][0];
-                break;
-            case ExtractorInterface::TYPE_MULTIPOLYGON:
-                if (!isset($geometry['coordinates'][0][0][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
-
-                $coordinates = $geometry['coordinates'][0][0][0];
-                break;
-            case ExtractorInterface::TYPE_GEOMETRYCOLLECTION:
-                if (!isset($geometry['geometries'][0])) {
-                    return Dimension::DIMENSION_2D;
-                }
-
-                return $this->extractDimension($geometry['geometries'][0]);
+        if (
+            GeometryType::GEOMETRYCOLLECTION === $type &&
+            isset($geometry['geometries'][0])
+        ) {
+            return $this->extractDimension($geometry['geometries'][0]);
         }
+
+        $coordinates = match ($type) {
+            GeometryType::POINT => $geometry['coordinates'] ?? [],
+            GeometryType::LINESTRING => $geometry['coordinates'][0] ?? [],
+            GeometryType::POLYGON => $geometry['coordinates'][0][0] ?? [],
+            GeometryType::MULTIPOINT => $geometry['coordinates'][0] ?? [],
+            GeometryType::MULTILINESTRING => $geometry['coordinates'][0][0] ?? [],
+            GeometryType::MULTIPOLYGON => $geometry['coordinates'][0][0][0] ?? [],
+            GeometryType::GEOMETRYCOLLECTION => [],
+        };
 
         if (isset($coordinates[2], $coordinates[3])) {
             return Dimension::DIMENSION_4D;
@@ -127,9 +91,9 @@ class Extractor implements ExtractorInterface
         return Dimension::DIMENSION_2D;
     }
 
-    public function extractSrid($geometry)
+    public function extractSrid(mixed $geometry): ?int
     {
-        $geometry = $this->tryConvertToArray($geometry);
+        $geometry = $this->convertToArray($geometry);
 
         if (!is_array($geometry)) {
             return null;
@@ -146,12 +110,11 @@ class Extractor implements ExtractorInterface
         return null;
     }
 
-    public function extractCoordinatesFromPoint($point)
+    public function extractCoordinatesFromPoint(mixed $point): ?Coordinates
     {
-        $point = $this->tryConvertToArray($point);
+        $point = $this->convertToArray($point);
 
         if (
-            !is_array($point) ||
             !isset($point['coordinates']) ||
             !is_array($point['coordinates'])
         ) {
@@ -166,23 +129,22 @@ class Extractor implements ExtractorInterface
         if (
             !isset($coordinates[0], $coordinates[1])
         ) {
-            return array();
+            return null;
         }
 
-        return array(
-            'x' => $coordinates[0],
-            'y' => $coordinates[1],
-            'z' => isset($coordinates[2]) ? $coordinates[2] : null,
-            'm' => isset($coordinates[3]) ? $coordinates[3] : null,
+        return new Coordinates(
+            x: $coordinates[0],
+            y: $coordinates[1],
+            z: $coordinates[2] ?? null,
+            m: $coordinates[3] ?? null,
         );
     }
 
-    public function extractPointsFromLineString($lineString)
+    public function extractPointsFromLineString(mixed $lineString): iterable
     {
-        $lineString = $this->tryConvertToArray($lineString);
+        $lineString = $this->convertToArray($lineString);
 
         if (
-            !is_array($lineString) ||
             !isset($lineString['coordinates']) ||
             !is_array($lineString['coordinates'])
         ) {
@@ -193,19 +155,18 @@ class Extractor implements ExtractorInterface
         }
 
         return array_map(function ($point) {
-            return array(
+            return [
                 'type' => 'Point',
-                'coordinates' => $point
-            );
+                'coordinates' => $point,
+            ];
         }, $lineString['coordinates']);
     }
 
-    public function extractLineStringsFromPolygon($polygon)
+    public function extractLineStringsFromPolygon(mixed $polygon): iterable
     {
-        $polygon = $this->tryConvertToArray($polygon);
+        $polygon = $this->convertToArray($polygon);
 
         if (
-            !is_array($polygon) ||
             !isset($polygon['coordinates']) ||
             !is_array($polygon['coordinates'])
         ) {
@@ -216,19 +177,18 @@ class Extractor implements ExtractorInterface
         }
 
         return array_map(function ($lineString) {
-            return array(
+            return [
                 'type' => 'LineString',
-                'coordinates' => $lineString
-            );
+                'coordinates' => $lineString,
+            ];
         }, $polygon['coordinates']);
     }
 
-    public function extractPointsFromMultiPoint($multiPoint)
+    public function extractPointsFromMultiPoint(mixed $multiPoint): iterable
     {
-        $multiPoint = $this->tryConvertToArray($multiPoint);
+        $multiPoint = $this->convertToArray($multiPoint);
 
         if (
-            !is_array($multiPoint) ||
             !isset($multiPoint['coordinates']) ||
             !is_array($multiPoint['coordinates'])
         ) {
@@ -239,19 +199,18 @@ class Extractor implements ExtractorInterface
         }
 
         return array_map(function ($point) {
-            return array(
+            return [
                 'type' => 'Point',
-                'coordinates' => $point
-            );
+                'coordinates' => $point,
+            ];
         }, $multiPoint['coordinates']);
     }
 
-    public function extractLineStringsFromMultiLineString($multiLineString)
+    public function extractLineStringsFromMultiLineString(mixed $multiLineString): iterable
     {
-        $multiLineString = $this->tryConvertToArray($multiLineString);
+        $multiLineString = $this->convertToArray($multiLineString);
 
         if (
-            !is_array($multiLineString) ||
             !isset($multiLineString['coordinates']) ||
             !is_array($multiLineString['coordinates'])
         ) {
@@ -262,19 +221,18 @@ class Extractor implements ExtractorInterface
         }
 
         return array_map(function ($lineString) {
-            return array(
+            return [
                 'type' => 'LineString',
-                'coordinates' => $lineString
-            );
+                'coordinates' => $lineString,
+            ];
         }, $multiLineString['coordinates']);
     }
 
-    public function extractPolygonsFromMultiPolygon($multiPolygon)
+    public function extractPolygonsFromMultiPolygon(mixed $multiPolygon): iterable
     {
-        $multiPolygon = $this->tryConvertToArray($multiPolygon);
+        $multiPolygon = $this->convertToArray($multiPolygon);
 
         if (
-            !is_array($multiPolygon) ||
             !isset($multiPolygon['coordinates']) ||
             !is_array($multiPolygon['coordinates'])
         ) {
@@ -285,19 +243,18 @@ class Extractor implements ExtractorInterface
         }
 
         return array_map(function ($polygon) {
-            return array(
+            return [
                 'type' => 'Polygon',
-                'coordinates' => $polygon
-            );
+                'coordinates' => $polygon,
+            ];
         }, $multiPolygon['coordinates']);
     }
 
-    public function extractGeometriesFromGeometryCollection($geometryCollection)
+    public function extractGeometriesFromGeometryCollection(mixed $geometryCollection): iterable
     {
-        $geometryCollection = $this->tryConvertToArray($geometryCollection);
+        $geometryCollection = $this->convertToArray($geometryCollection);
 
         if (
-            !is_array($geometryCollection) ||
             !isset($geometryCollection['geometries']) ||
             !is_array($geometryCollection['geometries'])
         ) {
@@ -310,15 +267,15 @@ class Extractor implements ExtractorInterface
         return $geometryCollection['geometries'];
     }
 
-    public function tryConvertToArray($geometry)
+    public function convertToArray(mixed $geometry): mixed
     {
         $array = $geometry;
 
         if (is_string($array)) {
-            $decoded = json_decode($array, true);
-
-            if (JSON_ERROR_NONE === json_last_error()) {
-                $array = $decoded;
+            try {
+                return json_decode($array, true, 512, JSON_THROW_ON_ERROR);
+            } catch (Throwable) {
+                return $array;
             }
         }
 
@@ -327,11 +284,11 @@ class Extractor implements ExtractorInterface
         }
 
         if (!is_array($array)) {
-            return $geometry;
+            return $array;
         }
 
         return array_map(
-            array($this, 'tryConvertToArray'),
+            [$this, 'convertToArray'],
             $array
         );
     }

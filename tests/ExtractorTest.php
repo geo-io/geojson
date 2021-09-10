@@ -4,564 +4,566 @@ namespace GeoIO\GeoJSON;
 
 use GeoIO\Dimension;
 use GeoIO\Extractor as ExtractorInterface;
+use GeoIO\GeometryType;
+use PHPUnit\Framework\TestCase;
+use GeoIO\GeoJSON\Exception\InvalidGeometryException;
 
-class ExtractorTest  extends \PHPUnit_Framework_TestCase
+class ExtractorTest extends TestCase
 {
-    public function testSupports()
+    public function testSupports(): void
     {
         $extractor = new Extractor();
 
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'Point'
-        )));
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'LineString'
-        )));
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'Polygon'
-        )));
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'MultiPoint'
-        )));
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'MultiLineString'
-        )));
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'MultiPolygon'
-        )));
-        $this->assertTrue($extractor->supports(array(
-            'type' => 'GeometryCollection'
-        )));
+        $this->assertTrue($extractor->supports([
+            'type' => 'Point',
+        ]));
+        $this->assertTrue($extractor->supports([
+            'type' => 'LineString',
+        ]));
+        $this->assertTrue($extractor->supports([
+            'type' => 'Polygon',
+        ]));
+        $this->assertTrue($extractor->supports([
+            'type' => 'MultiPoint',
+        ]));
+        $this->assertTrue($extractor->supports([
+            'type' => 'MultiLineString',
+        ]));
+        $this->assertTrue($extractor->supports([
+            'type' => 'MultiPolygon',
+        ]));
+        $this->assertTrue($extractor->supports([
+            'type' => 'GeometryCollection',
+        ]));
 
         $this->assertFalse($extractor->supports(new \stdClass()));
         $this->assertFalse($extractor->supports(null));
         $this->assertFalse($extractor->supports('foo'));
     }
 
-    public function testExtractType()
+    public function testExtractType(): void
     {
         $extractor = new Extractor();
 
-        $this->assertSame(ExtractorInterface::TYPE_POINT, $extractor->extractType(array(
-            'type' => 'Point'
-        )));
-        $this->assertSame(ExtractorInterface::TYPE_LINESTRING, $extractor->extractType(array(
-            'type' => 'LineString'
-        )));
-        $this->assertSame(ExtractorInterface::TYPE_POLYGON, $extractor->extractType(array(
-            'type' => 'Polygon'
-        )));
-        $this->assertSame(ExtractorInterface::TYPE_MULTIPOINT, $extractor->extractType(array(
-            'type' => 'MultiPoint'
-        )));
-        $this->assertSame(ExtractorInterface::TYPE_MULTILINESTRING, $extractor->extractType(array(
-            'type' => 'MultiLineString'
-        )));
-        $this->assertSame(ExtractorInterface::TYPE_MULTIPOLYGON, $extractor->extractType(array(
-            'type' => 'MultiPolygon'
-        )));
-        $this->assertSame(ExtractorInterface::TYPE_GEOMETRYCOLLECTION, $extractor->extractType(array(
-            'type' => 'GeometryCollection'
-        )));
+        $this->assertEquals(GeometryType::POINT, $extractor->extractType([
+            'type' => 'Point',
+        ]));
+        $this->assertEquals(GeometryType::LINESTRING, $extractor->extractType([
+            'type' => 'LineString',
+        ]));
+        $this->assertEquals(GeometryType::POLYGON, $extractor->extractType([
+            'type' => 'Polygon',
+        ]));
+        $this->assertEquals(GeometryType::MULTIPOINT, $extractor->extractType([
+            'type' => 'MultiPoint',
+        ]));
+        $this->assertEquals(GeometryType::MULTILINESTRING, $extractor->extractType([
+            'type' => 'MultiLineString',
+        ]));
+        $this->assertEquals(GeometryType::MULTIPOLYGON, $extractor->extractType([
+            'type' => 'MultiPolygon',
+        ]));
+        $this->assertEquals(GeometryType::GEOMETRYCOLLECTION, $extractor->extractType([
+            'type' => 'GeometryCollection',
+        ]));
     }
 
-    public function testExtractTypeThrowsExceptionForInvalidGeometry()
+    public function testExtractTypeThrowsExceptionForInvalidGeometry(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
         $extractor->extractType(new \stdClass());
     }
 
-    public function testExtractTypeThrowsExceptionForInvalidGeometryType()
+    public function testExtractTypeThrowsExceptionForInvalidGeometryType(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractType(array(
-            'type' => 'Invalid'
-        ));
+        $extractor->extractType([
+            'type' => 'Invalid',
+        ]);
     }
 
     /**
-     * @dataProvider testExtractDimensionProvider
+     * @dataProvider extractDimensionProvider
      */
-    public function testExtractDimension($geometry, $expectedDimension)
+    public function testExtractDimension(array $geometry, string $expectedDimension): void
     {
         $extractor = new Extractor();
 
-        $this->assertSame(
+        $this->assertEquals(
             $expectedDimension,
             $extractor->extractDimension($geometry)
         );
     }
 
-    public function testExtractDimensionProvider()
+    public function extractDimensionProvider(): array
     {
-        return array(
-            array(
-                array(
+        return [
+            [
+                [
                     'type' => 'Point',
-                    'coordinates' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'Point',
-                    'coordinates' => array(1, 1)
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [1, 1],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'Point',
-                    'coordinates' => array(1, 1, 1)
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                    'coordinates' => [1, 1, 1],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'Point',
-                    'coordinates' => array(1, 1, null, 1)
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                    'coordinates' => [1, 1, null, 1],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'Point',
-                    'coordinates' => array(1, 1, 1, 1)
-                ),
-                Dimension::DIMENSION_4D
-            ),
+                    'coordinates' => [1, 1, 1, 1],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
 
-            array(
-                array(
+            [
+                [
                     'type' => 'LineString',
-                    'coordinates' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'LineString',
-                    array(
-                        array(1, 1),
-                        array(2, 2)
-                    )
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    [
+                        [1, 1],
+                        [2, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'LineString',
-                    'coordinates' => array(
-                        array(1, 1, 1),
-                        array(2, 2, 2)
-                    )
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [1, 1, 1],
+                        [2, 2, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'LineString',
-                    'coordinates' => array(
-                        array(1, 1, null, 1),
-                        array(2, 2, null, 2)
-                    )
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [1, 1, null, 1],
+                        [2, 2, null, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'LineString',
-                    'coordinates' => array(
-                        array(1, 1, 1, 1),
-                        array(2, 2, 2, 2)
-                    )
-                ),
-                Dimension::DIMENSION_4D
-            ),
+                    'coordinates' => [
+                        [1, 1, 1, 1],
+                        [2, 2, 2, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
 
-            array(
-                array(
+            [
+                [
                     'type' => 'Polygon',
-                    'coordinates' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'Polygon',
-                    'coordinates' => array(
-                        array(array(1, 1)),
-                        array(array(2, 2))
-                    )
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [[1, 1]],
+                        [[2, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'Polygon',
-                    'coordinates' => array(
-                        array(array(1, 1, 1)),
-                        array(array(2, 2, 2))
-                    )
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [[1, 1, 1]],
+                        [[2, 2, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'Polygon',
-                    'coordinates' => array(
-                        array(array(1, 1, null, 1)),
-                        array(array(2, 2, null, 2))
-                    )
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [[1, 1, null, 1]],
+                        [[2, 2, null, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'Polygon',
-                    'coordinates' => array(
-                        array(array(1, 1, 1, 1)),
-                        array(array(2, 2, 2, 2))
-                    )
-                ),
-                Dimension::DIMENSION_4D
-            ),
+                    'coordinates' => [
+                        [[1, 1, 1, 1]],
+                        [[2, 2, 2, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
 
-            array(
-                array(
+            [
+                [
                     'type' => 'MultiPoint',
-                    'coordinates' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'MultiPoint',
-                    'coordinates' => array(
-                        array(1, 1),
-                        array(2, 2)
-                    )
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [1, 1],
+                        [2, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'MultiPoint',
-                    'coordinates' => array(
-                        array(1, 1, 1),
-                        array(2, 2, 2)
-                    )
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [1, 1, 1],
+                        [2, 2, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'MultiPoint',
-                    'coordinates' => array(
-                        array(1, 1, null, 1),
-                        array(2, 2, null, 2)
-                    )
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [1, 1, null, 1],
+                        [2, 2, null, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'MultiPoint',
-                    'coordinates' => array(
-                        array(1, 1, 1, 1),
-                        array(2, 2, 2, 2)
-                    )
-                ),
-                Dimension::DIMENSION_4D
-            ),
+                    'coordinates' => [
+                        [1, 1, 1, 1],
+                        [2, 2, 2, 2],
+                    ],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
 
-            array(
-                array(
+            [
+                [
                     'type' => 'MultiLineString',
-                    'coordinates' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'MultiLineString',
-                    'coordinates' => array(
-                        array(array(1, 1)),
-                        array(array(2, 2))
-                    )
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [[1, 1]],
+                        [[2, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'MultiLineString',
-                    'coordinates' => array(
-                        array(array(1, 1, 1)),
-                        array(array(2, 2, 2))
-                    )
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [[1, 1, 1]],
+                        [[2, 2, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'MultiLineString',
-                    'coordinates' => array(
-                        array(array(1, 1, null, 1)),
-                        array(array(2, 2, null, 2))
-                    )
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [[1, 1, null, 1]],
+                        [[2, 2, null, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'MultiLineString',
-                    'coordinates' => array(
-                        array(array(1, 1, 1, 1)),
-                        array(array(2, 2, 2, 2))
-                    )
-                ),
-                Dimension::DIMENSION_4D
-            ),
+                    'coordinates' => [
+                        [[1, 1, 1, 1]],
+                        [[2, 2, 2, 2]],
+                    ],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
 
-            array(
-                array(
+            [
+                [
                     'type' => 'MultiPolygon',
-                    'coordinates' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'MultiPolygon',
-                    'coordinates' => array(
-                        array(
-                            array(array(1, 1)),
-                            array(array(2, 2))
-                        )
-                    )
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [
+                            [[1, 1]],
+                            [[2, 2]],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'MultiPolygon',
-                    'coordinates' => array(
-                        array(
-                            array(array(1, 1, 1)),
-                            array(array(2, 2, 2))
-                        )
-                    )
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [
+                            [[1, 1, 1]],
+                            [[2, 2, 2]],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'MultiPolygon',
-                    'coordinates' => array(
-                        array(
-                            array(array(1, 1, null, 1)),
-                            array(array(2, 2, null, 2))
-                        )
-                    )
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                    'coordinates' => [
+                        [
+                            [[1, 1, null, 1]],
+                            [[2, 2, null, 2]],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'MultiPolygon',
-                    'coordinates' => array(
-                        array(
-                            array(array(1, 1, 1, 1)),
-                            array(array(2, 2, 2, 2))
-                        )
-                    )
-                ),
-                Dimension::DIMENSION_4D
-            ),
+                    'coordinates' => [
+                        [
+                            [[1, 1, 1, 1]],
+                            [[2, 2, 2, 2]],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
 
-            array(
-                array(
+            [
+                [
                     'type' => 'GeometryCollection',
-                    'geometries' => array()
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                    'geometries' => [],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'GeometryCollection',
-                    'geometries' => array(
-                        array(
+                    'geometries' => [
+                        [
                             'type' => 'Point',
-                            'coordinates' => array(
-                                1, 1
-                            )
-                        ),
-                    )
-                ),
-                Dimension::DIMENSION_2D
-            ),
-            array(
-                array(
+                            'coordinates' => [
+                                1, 1,
+                            ],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_2D,
+            ],
+            [
+                [
                     'type' => 'GeometryCollection',
-                    'geometries' => array(
-                        array(
+                    'geometries' => [
+                        [
                             'type' => 'Point',
-                            'coordinates' => array(
-                                1, 1, 1
-                            )
-                        ),
-                    )
-                ),
-                Dimension::DIMENSION_3DZ
-            ),
-            array(
-                array(
+                            'coordinates' => [
+                                1, 1, 1,
+                            ],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_3DZ,
+            ],
+            [
+                [
                     'type' => 'GeometryCollection',
-                    'geometries' => array(
-                        array(
+                    'geometries' => [
+                        [
                             'type' => 'Point',
-                            'coordinates' => array(
-                                1, 1, null, 1
-                            )
-                        ),
-                    )
-                ),
-                Dimension::DIMENSION_3DM
-            ),
-            array(
-                array(
+                            'coordinates' => [
+                                1, 1, null, 1,
+                            ],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_3DM,
+            ],
+            [
+                [
                     'type' => 'GeometryCollection',
-                    'geometries' => array(
-                        array(
+                    'geometries' => [
+                        [
                             'type' => 'Point',
-                            'coordinates' => array(
-                                1, 1, 1, 1
-                            )
-                        ),
-                    )
-                ),
-                Dimension::DIMENSION_4D
-            ),
-        );
+                            'coordinates' => [
+                                1, 1, 1, 1,
+                            ],
+                        ],
+                    ],
+                ],
+                Dimension::DIMENSION_4D,
+            ],
+        ];
     }
 
-    public function testExtractDimensionThrowsExceptionForInvalidGeometry()
+    public function testExtractDimensionThrowsExceptionForInvalidGeometry(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
         $extractor->extractDimension(new \stdClass());
     }
 
-    public function testExtractDimensionThrowsExceptionForInvalidGeometryType()
+    public function testExtractDimensionThrowsExceptionForInvalidGeometryType(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractDimension(array(
-            'type' => 'Invalid'
-        ));
+        $extractor->extractDimension([
+            'type' => 'Invalid',
+        ]);
     }
 
-    public function testExtractSrid()
+    public function testExtractSrid(): void
     {
         $extractor = new Extractor();
 
         $this->assertNull($extractor->extractSrid('foo'));
-        $this->assertNull($extractor->extractSrid(array()));
+        $this->assertNull($extractor->extractSrid([]));
 
-        $json = array(
+        $json = [
             'type' => 'Point',
-            'crs' => array(
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
+                'properties' => [
                     'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
-                )
-            )
-        );
+                ],
+            ],
+        ];
 
-        $this->assertSame(4326, $extractor->extractSrid($json));
+        $this->assertEquals(4326, $extractor->extractSrid($json));
 
-        $json = array(
+        $json = [
             'type' => 'Point',
-            'crs' => array(
+            'crs' => [
                 'type' => 'link',
-                'properties' => array(
+                'properties' => [
                     'href' => 'http://spatialreference.org/ref/epsg/4326/',
-                )
-            )
-        );
+                ],
+            ],
+        ];
 
-        $this->assertSame(4326, $extractor->extractSrid($json));
+        $this->assertEquals(4326, $extractor->extractSrid($json));
     }
 
-    public function testExtractCoordinatesFromPoint()
+    public function testExtractCoordinatesFromPoint(): void
     {
-        $json = array(
+        $json = [
             'type' => 'Point',
-            'coordinates' => array(1, 2, 3, 4)
-        );
+            'coordinates' => [1, 2, 3, 4],
+        ];
 
         $extractor = new Extractor();
 
         $coordinates = $extractor->extractCoordinatesFromPoint($json);
 
-        $this->assertInternalType('array', $coordinates);
-        $this->assertSame(1, $coordinates['x']);
-        $this->assertSame(2, $coordinates['y']);
-        $this->assertSame(3, $coordinates['z']);
-        $this->assertSame(4, $coordinates['m']);
+        $this->assertEquals(1, $coordinates->x);
+        $this->assertEquals(2, $coordinates->y);
+        $this->assertEquals(3, $coordinates->z);
+        $this->assertEquals(4, $coordinates->m);
     }
 
-    public function testExtractCoordinatesFromEmptyPoint()
+    public function testExtractCoordinatesFromEmptyPoint(): void
     {
-        $json = array(
+        $json = [
             'type' => 'Point',
-            'coordinates' => array()
-        );
+            'coordinates' => [],
+        ];
 
         $extractor = new Extractor();
 
         $coordinates = $extractor->extractCoordinatesFromPoint($json);
 
-        $this->assertSame(array(), $coordinates);
+        $this->assertNull($coordinates);
     }
 
 
-    public function testExtractCoordinatesfromPointThrowsExceptionForInvalidCoordinates()
+    public function testExtractCoordinatesfromPointThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractCoordinatesFromPoint(array(
-            'coordinates' => null
-        ));
+        $extractor->extractCoordinatesFromPoint([
+            'coordinates' => null,
+        ]);
     }
 
-    public function testExtractPointsFromLineString()
+    public function testExtractPointsFromLineString(): void
     {
-        $json = array(
+        $json = [
             'type' => 'LineString',
-            'coordinates' =>  array(
-                array(1, 1),
-                array(2, 2)
-            )
-        );
+            'coordinates' => [
+                [1, 1],
+                [2, 2],
+            ],
+        ];
 
-        $expected = array(
-            array(
+        $expected = [
+            [
                 'type' => 'Point',
-                'coordinates' => array(1, 1)
-            ),
-            array(
+                'coordinates' => [1, 1],
+            ],
+            [
                 'type' => 'Point',
-                'coordinates' => array(2, 2)
-            )
-        );
+                'coordinates' => [2, 2],
+            ],
+        ];
 
         $extractor = new Extractor();
 
@@ -570,36 +572,36 @@ class ExtractorTest  extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $array);
     }
 
-    public function testExtractPointsFromLineStringThrowsExceptionForInvalidCoordinates()
+    public function testExtractPointsFromLineStringThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractPointsFromLineString(array(
-            'coordinates' => null
-        ));
+        $extractor->extractPointsFromLineString([
+            'coordinates' => null,
+        ]);
     }
 
-    public function testExtractLineStringsFromPolygon()
+    public function testExtractLineStringsFromPolygon(): void
     {
-        $json = array(
+        $json = [
             'type' => 'Polygon',
-            'coordinates' => array(
-                array(array(1, 1), array(2, 2)),
-                array(array(3, 3), array(4, 4))
-            )
-        );
+            'coordinates' => [
+                [[1, 1], [2, 2]],
+                [[3, 3], [4, 4]],
+            ],
+        ];
 
-        $expected = array(
-            array(
+        $expected = [
+            [
                 'type' => 'LineString',
-                'coordinates' =>  array(array(1, 1), array(2, 2))
-            ),
-            array(
+                'coordinates' => [[1, 1], [2, 2]],
+            ],
+            [
                 'type' => 'LineString',
-                'coordinates' => array(array(3, 3), array(4, 4))
-            )
-        );
+                'coordinates' => [[3, 3], [4, 4]],
+            ],
+        ];
 
         $extractor = new Extractor();
 
@@ -608,35 +610,35 @@ class ExtractorTest  extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $array);
     }
 
-    public function testExtractLineStringsFromPolygonThrowsExceptionForInvalidCoordinates()
+    public function testExtractLineStringsFromPolygonThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractLineStringsFromPolygon(array(
-            'coordinates' => null
-        ));
+        $extractor->extractLineStringsFromPolygon([
+            'coordinates' => null,
+        ]);
     }
 
-    public function testExtractPointsFromMultiPoint()
+    public function testExtractPointsFromMultiPoint(): void
     {
-        $json = array(
+        $json = [
             'type' => 'MultiPoint',
-            'coordinates' => array(
-                array(1, 1), array(2, 2)
-            )
-        );
+            'coordinates' => [
+                [1, 1], [2, 2],
+            ],
+        ];
 
-        $expected = array(
-            array(
+        $expected = [
+            [
                 'type' => 'Point',
-                'coordinates' => array(1, 1)
-            ),
-            array(
+                'coordinates' => [1, 1],
+            ],
+            [
                 'type' => 'Point',
-                'coordinates' => array(2, 2)
-            )
-        );
+                'coordinates' => [2, 2],
+            ],
+        ];
 
         $extractor = new Extractor();
 
@@ -645,36 +647,36 @@ class ExtractorTest  extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $array);
     }
 
-    public function testExtractPointsFromMultiPointThrowsExceptionForInvalidCoordinates()
+    public function testExtractPointsFromMultiPointThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractPointsFromMultiPoint(array(
-            'coordinates' => null
-        ));
+        $extractor->extractPointsFromMultiPoint([
+            'coordinates' => null,
+        ]);
     }
 
-    public function testExtractLineStringsFromMultiLineString()
+    public function testExtractLineStringsFromMultiLineString(): void
     {
-        $json = array(
+        $json = [
             'type' => 'MultiLineString',
-            'coordinates' => array(
-                array(array(1, 1), array(2, 2)),
-                array(array(3, 3), array(4, 5))
-            )
-        );
+            'coordinates' => [
+                [[1, 1], [2, 2]],
+                [[3, 3], [4, 5]],
+            ],
+        ];
 
-        $expected = array(
-            array(
+        $expected = [
+            [
                 'type' => 'LineString',
-                'coordinates' =>  array(array(1, 1), array(2, 2))
-            ),
-            array(
+                'coordinates' => [[1, 1], [2, 2]],
+            ],
+            [
                 'type' => 'LineString',
-                'coordinates' => array(array(3, 3), array(4, 5))
-            )
-        );
+                'coordinates' => [[3, 3], [4, 5]],
+            ],
+        ];
 
         $extractor = new Extractor();
 
@@ -683,48 +685,48 @@ class ExtractorTest  extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $array);
     }
 
-    public function testExtractLineStringsFromMultiLineStringThrowsExceptionForInvalidCoordinates()
+    public function testExtractLineStringsFromMultiLineStringThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractLineStringsFromMultiLineString(array(
-            'coordinates' => null
-        ));
+        $extractor->extractLineStringsFromMultiLineString([
+            'coordinates' => null,
+        ]);
     }
 
-    public function testExtractMultiPolygon()
+    public function testExtractMultiPolygon(): void
     {
-        $json = array(
+        $json = [
             'type' => 'MultiPolygon',
-            'coordinates' => array(
-                array(
-                    array(array(1, 1), array(2, 2)),
-                    array(array(3, 3), array(4, 4))
-                ),
-                array(
-                    array(array(5, 5), array(6, 6)),
-                    array(array(7, 7), array(8, 8))
-                )
-            )
-        );
+            'coordinates' => [
+                [
+                    [[1, 1], [2, 2]],
+                    [[3, 3], [4, 4]],
+                ],
+                [
+                    [[5, 5], [6, 6]],
+                    [[7, 7], [8, 8]],
+                ],
+            ],
+        ];
 
-        $expected = array(
-            array(
+        $expected = [
+            [
                 'type' => 'Polygon',
-                'coordinates' =>  array(
-                    array(array(1, 1), array(2, 2)),
-                    array(array(3, 3), array(4, 4))
-                )
-            ),
-            array(
+                'coordinates' => [
+                    [[1, 1], [2, 2]],
+                    [[3, 3], [4, 4]],
+                ],
+            ],
+            [
                 'type' => 'Polygon',
-                'coordinates' => array(
-                    array(array(5, 5), array(6, 6)),
-                    array(array(7, 7), array(8, 8))
-                )
-            )
-        );
+                'coordinates' => [
+                    [[5, 5], [6, 6]],
+                    [[7, 7], [8, 8]],
+                ],
+            ],
+        ];
 
         $extractor = new Extractor();
 
@@ -733,48 +735,48 @@ class ExtractorTest  extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $array);
     }
 
-    public function testExtractMultiPolygonThrowsExceptionForInvalidCoordinates()
+    public function testExtractMultiPolygonThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractPolygonsFromMultiPolygon(array(
-            'coordinates' => null
-        ));
+        $extractor->extractPolygonsFromMultiPolygon([
+            'coordinates' => null,
+        ]);
     }
 
-    public function testExtractGeometryCollection()
+    public function testExtractGeometryCollection(): void
     {
-        $json = array(
+        $json = [
             'type' => 'GeometryCollection',
-            'geometries' => array(
-                array(
+            'geometries' => [
+                [
                     'type' => 'Polygon',
-                    'coordinates' =>  array(
-                        array(array(1, 1), array(2, 2)),
-                        array(array(3, 3), array(4, 4))
-                    )
-                ),
-                array(
+                    'coordinates' => [
+                        [[1, 1], [2, 2]],
+                        [[3, 3], [4, 4]],
+                    ],
+                ],
+                [
                     'type' => 'LineString',
-                    'coordinates' =>  array(array(1, 1), array(2, 2))
-                ),
-            )
-        );
+                    'coordinates' => [[1, 1], [2, 2]],
+                ],
+            ],
+        ];
 
-        $expected = array(
-            array(
+        $expected = [
+            [
                 'type' => 'Polygon',
-                'coordinates' =>  array(
-                    array(array(1, 1), array(2, 2)),
-                    array(array(3, 3), array(4, 4))
-                )
-            ),
-            array(
+                'coordinates' => [
+                    [[1, 1], [2, 2]],
+                    [[3, 3], [4, 4]],
+                ],
+            ],
+            [
                 'type' => 'LineString',
-                'coordinates' =>  array(array(1, 1), array(2, 2))
-            ),
-        );
+                'coordinates' => [[1, 1], [2, 2]],
+            ],
+        ];
 
         $extractor = new Extractor();
 
@@ -783,82 +785,82 @@ class ExtractorTest  extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $array);
     }
 
-    public function testExtractGeometryCollectionThrowsExceptionForInvalidCoordinates()
+    public function testExtractGeometryCollectionThrowsExceptionForInvalidCoordinates(): void
     {
-        $this->setExpectedException('GeoIO\GeoJSON\Exception\InvalidGeometryException');
+        $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractGeometriesFromGeometryCollection(array(
-            'geometries' => null
-        ));
+        $extractor->extractGeometriesFromGeometryCollection([
+            'geometries' => null,
+        ]);
     }
 
-    public function testTryConvertToArrayConvertsString()
+    public function testTryConvertToArrayConvertsString(): void
     {
         $extractor = new Extractor();
-        $array = $extractor->tryConvertToArray(
+        $array = $extractor->convertToArray(
             json_encode(
-                array(
+                [
                     'type' => 'Point',
-                    'coordinates' => array(
-                        1, 1, 1, 1
-                    ),
-                    'crs' => array(
+                    'coordinates' => [
+                        1, 1, 1, 1,
+                    ],
+                    'crs' => [
                         'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                )
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ]
             )
         );
 
-        $expected = array(
+        $expected = [
             'type' => 'Point',
-            'coordinates' => array(1, 1, 1, 1),
-            'crs' => array(
+            'coordinates' => [1, 1, 1, 1],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $array);
     }
 
-    public function testTryConvertToArrayConvertsObject()
+    public function testTryConvertToArrayConvertsObject(): void
     {
         $extractor = new Extractor();
-        $array = $extractor->tryConvertToArray(
+        $array = $extractor->convertToArray(
             json_decode(
                 json_encode(
-                    array(
+                    [
                         'type' => 'Point',
-                        'coordinates' => array(
-                            1, 1, 1, 1
-                        ),
-                        'crs' => array(
+                        'coordinates' => [
+                            1, 1, 1, 1,
+                        ],
+                        'crs' => [
                             'type' => 'name',
-                            'properties' => array(
-                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                            )
-                        )
-                    )
+                            'properties' => [
+                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                            ],
+                        ],
+                    ]
                 )
             )
         );
 
-        $expected = array(
+        $expected = [
             'type' => 'Point',
-            'coordinates' => array(1, 1, 1, 1),
-            'crs' => array(
+            'coordinates' => [1, 1, 1, 1],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $array);
     }

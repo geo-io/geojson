@@ -2,474 +2,504 @@
 
 namespace GeoIO\GeoJSON;
 
+use GeoIO\Coordinates;
 use GeoIO\Dimension;
+use PHPUnit\Framework\TestCase;
 
-class FactoryTest  extends \PHPUnit_Framework_TestCase
+class FactoryTest extends TestCase
 {
-    public function testCreatePoint()
-    {
-        $factory = new Factory();
-
-        $geometry = $factory->createPoint(
-            Dimension::DIMENSION_4D, 
-            array(
-                'x' => 1,
-                'y' => 2,
-                'z' => 3,
-                'm' => 4,
-            ),
-            4326
-        );
-
-        $expected = array(
-            'type' => 'Point',
-            'coordinates' => array(1, 2, 3, 4),
-            'crs' => array(
-                'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
-
-        $this->assertEquals($expected, $geometry);
-    }
-
-    public function testCreateEmptyPoint()
+    public function testCreatePoint(): void
     {
         $factory = new Factory();
 
         $geometry = $factory->createPoint(
             Dimension::DIMENSION_4D,
-            array(),
-            4326
+            4326,
+            new Coordinates(
+                x: 1,
+                y: 2,
+                z: 3,
+                m: 4,
+            ),
         );
 
-        $expected = array(
+        $expected = [
             'type' => 'Point',
-            'coordinates' => array(),
-            'crs' => array(
+            'coordinates' => [1, 2, 3, 4],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreatePointM()
+    public function testCreateEmptyPoint(): void
     {
         $factory = new Factory();
 
         $geometry = $factory->createPoint(
             Dimension::DIMENSION_4D,
-            array(
-                'x' => 1,
-                'y' => 2,
-                'z' => null,
-                'm' => 4,
-            ),
-            4326
+            4326,
+            null,
         );
 
-        $expected = array(
+        $expected = [
             'type' => 'Point',
-            'coordinates' => array(1, 2, null, 4),
-            'crs' => array(
+            'coordinates' => [],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreateLineString()
+    public function testCreatePointM(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createLineString(Dimension::DIMENSION_4D, array(
-            array(
-                'type' => 'Point',
-                'coordinates' => array(1, 1),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
+        $geometry = $factory->createPoint(
+            Dimension::DIMENSION_4D,
+            4326,
+            new Coordinates(
+                x: 1,
+                y: 2,
+                z: null,
+                m: 4,
             ),
-            array(
-                'type' => 'Point',
-                'coordinates' => array(2, 2),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            )
-        ), 4326);
+        );
 
-        $expected = array(
+        $expected = [
+            'type' => 'Point',
+            'coordinates' => [1, 2, null, 4],
+            'crs' => [
+                'type' => 'name',
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, $geometry);
+    }
+
+    public function testCreateLineString(): void
+    {
+        $factory = new Factory();
+
+        $geometry = $factory->createLineString(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
+                    'type' => 'Point',
+                    'coordinates' => [1, 1],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'Point',
+                    'coordinates' => [2, 2],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $expected = [
             'type' => 'LineString',
-            'coordinates' => array(
-                array(1, 1),
-                array(2, 2)
-            ),
-            'crs' => array(
+            'coordinates' => [
+                [1, 1],
+                [2, 2],
+            ],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreateLinearRing()
+    public function testCreateLinearRing(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createLinearRing(Dimension::DIMENSION_4D, array(
-            array(
-                'type' => 'Point',
-                'coordinates' => array(1, 1),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            ),
-            array(
-                'type' => 'Point',
-                'coordinates' => array(2, 2),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            )
-        ), 4326);
+        $geometry = $factory->createLinearRing(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
+                    'type' => 'Point',
+                    'coordinates' => [1, 1],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'Point',
+                    'coordinates' => [2, 2],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
+        );
 
-        $expected = array(
+        $expected = [
             'type' => 'LineString',
-            'coordinates' => array(
-                array(1, 1),
-                array(2, 2)
-            ),
-            'crs' => array(
+            'coordinates' => [
+                [1, 1],
+                [2, 2],
+            ],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreatePolygon()
+    public function testCreatePolygon(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createPolygon(Dimension::DIMENSION_4D, array(
-            array(
-                'type' => 'LineString',
-                'coordinates' => array(
-                    array(1, 1),
-                    array(2, 2)
-                ),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            ),
-            array(
-                'type' => 'LineString',
-                'coordinates' => array(
-                    array(3, 3),
-                    array(4, 4)
-                ),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            )
-        ), 4326);
+        $geometry = $factory->createPolygon(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
+                    'type' => 'LineString',
+                    'coordinates' => [
+                        [1, 1],
+                        [2, 2],
+                    ],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'LineString',
+                    'coordinates' => [
+                        [3, 3],
+                        [4, 4],
+                    ],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
+        );
 
-        $expected = array(
+        $expected = [
             'type' => 'Polygon',
-            'coordinates' => array(
-                array(array(1, 1), array(2, 2)),
-                array(array(3, 3), array(4, 4))
-            ),
-            'crs' => array(
+            'coordinates' => [
+                [[1, 1], [2, 2]],
+                [[3, 3], [4, 4]],
+            ],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreateMultiPoint()
+    public function testCreateMultiPoint(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createMultiPoint(Dimension::DIMENSION_4D, array(
-            array(
-                'type' => 'Point',
-                'coordinates' => array(1, 1),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            ),
-            array(
-                'type' => 'Point',
-                'coordinates' => array(2, 2),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            )
-        ), 4326);
+        $geometry = $factory->createMultiPoint(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
+                    'type' => 'Point',
+                    'coordinates' => [1, 1],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'Point',
+                    'coordinates' => [2, 2],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
+        );
 
-        $expected = array(
+        $expected = [
             'type' => 'MultiPoint',
-            'coordinates' => array(
-                array(1, 1),
-                array(2, 2)
-            ),
-            'crs' => array(
+            'coordinates' => [
+                [1, 1],
+                [2, 2],
+            ],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreateMultiLineString()
+    public function testCreateMultiLineString(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createMultiLineString(Dimension::DIMENSION_4D, array(
-            array(
-                'type' => 'LineString',
-                'coordinates' => array(
-                    array(1, 1),
-                    array(2, 2)
-                ),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            ),
-            array(
-                'type' => 'LineString',
-                'coordinates' => array(
-                    array(3, 3),
-                    array(4, 4)
-                ),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            )
-        ), 4326);
+        $geometry = $factory->createMultiLineString(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
+                    'type' => 'LineString',
+                    'coordinates' => [
+                        [1, 1],
+                        [2, 2],
+                    ],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'LineString',
+                    'coordinates' => [
+                        [3, 3],
+                        [4, 4],
+                    ],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
+        );
 
-        $expected = array(
+        $expected = [
             'type' => 'MultiLineString',
-            'coordinates' => array(
-                array(array(1, 1), array(2, 2)),
-                array(array(3, 3), array(4, 4))
-            ),
-            'crs' => array(
+            'coordinates' => [
+                [[1, 1], [2, 2]],
+                [[3, 3], [4, 4]],
+            ],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreateMultiPolygon()
+    public function testCreateMultiPolygon(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createMultiPolygon(Dimension::DIMENSION_4D, array(
-            array(
-                array(
-                    'type' => 'LineString',
-                    'coordinates' => array(
-                        array(1, 1),
-                        array(2, 2)
-                    ),
-                    'crs' => array(
-                        'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                ),
-                array(
-                    'type' => 'LineString',
-                    'coordinates' => array(
-                        array(3, 3),
-                        array(4, 4)
-                    ),
-                    'crs' => array(
-                        'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                )
-            ),
-            array(
-                array(
-                    'type' => 'LineString',
-                    'coordinates' => array(
-                        array(5, 5),
-                        array(6, 6)
-                    ),
-                    'crs' => array(
-                        'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                ),
-                array(
-                    'type' => 'LineString',
-                    'coordinates' => array(
-                        array(7, 7),
-                        array(8, 8)
-                    ),
-                    'crs' => array(
-                        'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                )
-            )
-        ), 4326);
+        $geometry = $factory->createMultiPolygon(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
+                    [
+                        'type' => 'LineString',
+                        'coordinates' => [
+                            [1, 1],
+                            [2, 2],
+                        ],
+                        'crs' => [
+                            'type' => 'name',
+                            'properties' => [
+                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                            ],
+                        ],
+                    ],
+                    [
+                        'type' => 'LineString',
+                        'coordinates' => [
+                            [3, 3],
+                            [4, 4],
+                        ],
+                        'crs' => [
+                            'type' => 'name',
+                            'properties' => [
+                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    [
+                        'type' => 'LineString',
+                        'coordinates' => [
+                            [5, 5],
+                            [6, 6],
+                        ],
+                        'crs' => [
+                            'type' => 'name',
+                            'properties' => [
+                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                            ],
+                        ],
+                    ],
+                    [
+                        'type' => 'LineString',
+                        'coordinates' => [
+                            [7, 7],
+                            [8, 8],
+                        ],
+                        'crs' => [
+                            'type' => 'name',
+                            'properties' => [
+                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        );
 
-        $expected = array(
+        $expected = [
             'type' => 'MultiPolygon',
-            'coordinates' => array(
-                array(
-                    array(array(1, 1), array(2, 2)),
-                    array(array(3, 3), array(4, 4))
-                ),
-                array(
-                    array(array(5, 5), array(6, 6)),
-                    array(array(7, 7), array(8, 8))
-                )
-            ),
-            'crs' => array(
+            'coordinates' => [
+                [
+                    [[1, 1], [2, 2]],
+                    [[3, 3], [4, 4]],
+                ],
+                [
+                    [[5, 5], [6, 6]],
+                    [[7, 7], [8, 8]],
+                ],
+            ],
+            'crs' => [
                 'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
-        );
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }
 
-    public function testCreateGeometryCollection()
+    public function testCreateGeometryCollection(): void
     {
         $factory = new Factory();
 
-        $geometry = $factory->createGeometryCollection(Dimension::DIMENSION_4D, array(
-            array(
-                'type' => 'Polygon',
-                'coordinates' =>  array(
-                    array(array(1, 1), array(2, 2)),
-                    array(array(3, 3), array(4, 4))
-                ),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            ),
-            array(
-                'type' => 'LineString',
-                'coordinates' =>  array(array(1, 1), array(2, 2)),
-                'crs' => array(
-                    'type' => 'name',
-                    'properties' => array(
-                        'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                    )
-                )
-            ),
-        ), 4326);
-
-        $expected = array(
-            'type' => 'GeometryCollection',
-            'geometries' => array(
-                array(
+        $geometry = $factory->createGeometryCollection(
+            Dimension::DIMENSION_4D,
+            4326,
+            [
+                [
                     'type' => 'Polygon',
-                    'coordinates' =>  array(
-                        array(array(1, 1), array(2, 2)),
-                        array(array(3, 3), array(4, 4))
-                    ),
-                    'crs' => array(
+                    'coordinates' => [
+                        [[1, 1], [2, 2]],
+                        [[3, 3], [4, 4]],
+                    ],
+                    'crs' => [
                         'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                ),
-                array(
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
                     'type' => 'LineString',
-                    'coordinates' =>  array(array(1, 1), array(2, 2)),
-                    'crs' => array(
+                    'coordinates' => [[1, 1], [2, 2]],
+                    'crs' => [
                         'type' => 'name',
-                        'properties' => array(
-                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                        )
-                    )
-                ),
-            ),
-            'crs' => array(
-                'type' => 'name',
-                'properties' => array(
-                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84'
-                )
-            )
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
         );
+
+        $expected = [
+            'type' => 'GeometryCollection',
+            'geometries' => [
+                [
+                    'type' => 'Polygon',
+                    'coordinates' => [
+                        [[1, 1], [2, 2]],
+                        [[3, 3], [4, 4]],
+                    ],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'LineString',
+                    'coordinates' => [[1, 1], [2, 2]],
+                    'crs' => [
+                        'type' => 'name',
+                        'properties' => [
+                            'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                        ],
+                    ],
+                ],
+            ],
+            'crs' => [
+                'type' => 'name',
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
 
         $this->assertEquals($expected, $geometry);
     }

@@ -2,17 +2,22 @@
 
 namespace GeoIO\GeoJSON;
 
+use GeoIO\Coordinates;
 use GeoIO\CRS;
+use GeoIO\Dimension;
 use GeoIO\Factory as FactoryInterface;
 
 class Factory implements FactoryInterface
 {
-    public function createPoint($dimension, array $coordinates, $srid = null)
-    {
-        $geometry = array(
+    public function createPoint(
+        string $dimension,
+        ?int $srid,
+        ?Coordinates $coordinates,
+    ): array {
+        $geometry = [
             'type' => 'Point',
-            'coordinates' => $this->coordinates($coordinates)
-        );
+            'coordinates' => $this->coordinates($coordinates),
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -21,14 +26,15 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    public function createLineString($dimension, array $points, $srid = null)
-    {
-        $geometry = array(
+    public function createLineString(
+        string $dimension,
+        ?int $srid,
+        iterable $points,
+    ): array {
+        $geometry = [
             'type' => 'LineString',
-            'coordinates' => array_map(function($point) {
-                return $point['coordinates'];
-            }, $points)
-        );
+            'coordinates' => $this->geometriesToCoordinates($points),
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -37,19 +43,23 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    public function createLinearRing($dimension, array $points, $srid = null)
-    {
-        return $this->createLineString($dimension, $points, $srid);
+    public function createLinearRing(
+        string $dimension,
+        ?int $srid,
+        iterable $points,
+    ): array {
+        return $this->createLineString($dimension, $srid, $points);
     }
 
-    public function createPolygon($dimension, array $lineStrings, $srid = null)
-    {
-        $geometry = array(
+    public function createPolygon(
+        string $dimension,
+        ?int $srid,
+        iterable $lineStrings,
+    ): array {
+        $geometry = [
             'type' => 'Polygon',
-            'coordinates' => array_map(function($lineString) {
-                return $lineString['coordinates'];
-            }, $lineStrings)
-        );
+            'coordinates' => $this->geometriesToCoordinates($lineStrings),
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -58,14 +68,15 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    public function createMultiPoint($dimension, array $points, $srid = null)
-    {
-        $geometry = array(
+    public function createMultiPoint(
+        string $dimension,
+        ?int $srid,
+        iterable $points,
+    ): array {
+        $geometry = [
             'type' => 'MultiPoint',
-            'coordinates' => array_map(function($point) {
-                return $point['coordinates'];
-            }, $points)
-        );
+            'coordinates' => $this->geometriesToCoordinates($points),
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -74,14 +85,15 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    public function createMultiLineString($dimension, array $lineStrings, $srid = null)
-    {
-        $geometry = array(
+    public function createMultiLineString(
+        string $dimension,
+        ?int $srid,
+        iterable $lineStrings,
+    ): array {
+        $geometry = [
             'type' => 'MultiLineString',
-            'coordinates' => array_map(function($lineString) {
-                return $lineString['coordinates'];
-            }, $lineStrings)
-        );
+            'coordinates' => $this->geometriesToCoordinates($lineStrings),
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -90,16 +102,21 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    public function createMultiPolygon($dimension, array $polygons, $srid = null)
-    {
-        $geometry = array(
+    public function createMultiPolygon(
+        string $dimension,
+        ?int $srid,
+        iterable $polygons,
+    ): array {
+        $coordinates = [];
+
+        foreach ($polygons as $polygon) {
+            $coordinates[] = $this->geometriesToCoordinates($polygon);
+        }
+
+        $geometry = [
             'type' => 'MultiPolygon',
-            'coordinates' => array_map(function($polygon) {
-                return array_map(function($lineString) {
-                    return $lineString['coordinates'];
-                }, $polygon);
-            }, $polygons)
-        );
+            'coordinates' => $coordinates,
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -108,12 +125,15 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    public function createGeometryCollection($dimension, array $geometries, $srid = null)
-    {
-        $geometry = array(
+    public function createGeometryCollection(
+        string $dimension,
+        ?int $srid,
+        iterable $geometries,
+    ): array {
+        $geometry = [
             'type' => 'GeometryCollection',
-            'geometries' => $geometries
-        );
+            'geometries' => $geometries,
+        ];
 
         if (null !== $srid) {
             $geometry['crs'] = $this->crs($srid);
@@ -122,39 +142,50 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
-    private function coordinates(array $coordinates)
+    private function geometriesToCoordinates(iterable $geometries): array
     {
-        if (!isset($coordinates['x'], $coordinates['y'])) {
-            return array();
+        $coordinates = [];
+
+        foreach ($geometries as $geometry) {
+            $coordinates[] = $geometry['coordinates'];
         }
 
-        $newCoordinates = array(
-            $coordinates['x'],
-            $coordinates['y']
-        );
+        return $coordinates;
+    }
 
-        if (isset($coordinates['z'])) {
-            $newCoordinates[] = $coordinates['z'];
+    private function coordinates(?Coordinates $coordinates): array
+    {
+        if (null === $coordinates) {
+            return [];
         }
 
-        if (isset($coordinates['m'])) {
+        $newCoordinates = [
+            $coordinates->x,
+            $coordinates->y,
+        ];
+
+        if (null !== $coordinates->z) {
+            $newCoordinates[] = $coordinates->z;
+        }
+
+        if (null !== $coordinates->m) {
             if (!isset($newCoordinates[2])) {
                 $newCoordinates[] = null;
             }
 
-            $newCoordinates[] = $coordinates['m'];
+            $newCoordinates[] = $coordinates->m;
         }
 
         return $newCoordinates;
     }
 
-    private function crs($srid)
+    private function crs(int $srid): array
     {
-        return array(
+        return [
             'type' => 'name',
-            'properties' => array(
-                'name' => CRS\srid_to_urn($srid)
-            )
-        );
+            'properties' => [
+                'name' => CRS\srid_to_urn($srid),
+            ],
+        ];
     }
 }
