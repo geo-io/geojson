@@ -21,4 +21,4 @@ composer require geo-io/geojson
 License
 -------
 
-Copyright (c) 2016-2017 Jan Sorgalla. Released under the [MIT License](LICENSE).
+Copyright (c) 2016-2021 Jan Sorgalla. Released under the [MIT License](LICENSE).
