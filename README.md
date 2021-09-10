@@ -1,8 +1,8 @@
 Geo I/O GeoJSON
 ================
 
-[![Build Status](https://travis-ci.org/geo-io/geojson.svg?branch=master)](https://travis-ci.org/geo-io/geojson)
-[![Coverage Status](https://coveralls.io/repos/github/geo-io/geojson/badge.svg?branch=master)](https://coveralls.io/github/geo-io/geojson?branch=master)
+[![Build Status](https://github.com/geo-io/geojson/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/geo-io/geojson/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/geo-io/geojson/badge.svg?branch=main&service=github)](https://coveralls.io/github/geo-io/geojson?branch=main)
 
 Geo I/O factory and extractor implementations for 
 [GeoJSON](http://geojson.org/).
