@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GeoIO\GeoJSON;
 
 use GeoIO\Coordinates;
@@ -8,8 +10,10 @@ use GeoIO\Dimension;
 use GeoIO\Extractor as ExtractorInterface;
 use GeoIO\GeoJSON\Exception\InvalidGeometryException;
 use GeoIO\GeometryType;
-use JsonSerializable;
 use Throwable;
+use function is_array;
+use function is_object;
+use function is_string;
 
 class Extractor implements ExtractorInterface
 {
@@ -34,7 +38,8 @@ class Extractor implements ExtractorInterface
 
         if (
             !is_array($geometry) ||
-            !isset($geometry['type'])
+            !isset($geometry['type']) ||
+            !is_string($geometry['type'])
         ) {
             throw InvalidGeometryException::create(
                 $geometry
@@ -66,6 +71,7 @@ class Extractor implements ExtractorInterface
             return $this->extractDimension($geometry['geometries'][0]);
         }
 
+        /** @var array $coordinates */
         $coordinates = match ($type) {
             GeometryType::POINT => $geometry['coordinates'] ?? [],
             GeometryType::LINESTRING => $geometry['coordinates'][0] ?? [],
@@ -99,11 +105,18 @@ class Extractor implements ExtractorInterface
             return null;
         }
 
-        if (isset($geometry['crs']['properties']['name'])) {
+        /** @var array{crs: ?array{properties: array{name: ?mixed, href: ?mixed}}} $geometry */
+        if (
+            isset($geometry['crs']['properties']['name']) &&
+            is_string($geometry['crs']['properties']['name'])
+        ) {
             return CRS\def_to_srid($geometry['crs']['properties']['name']);
         }
 
-        if (isset($geometry['crs']['properties']['href'])) {
+        if (
+            isset($geometry['crs']['properties']['href']) &&
+            is_string($geometry['crs']['properties']['href'])
+        ) {
             return CRS\def_to_srid($geometry['crs']['properties']['href']);
         }
 
@@ -124,6 +137,7 @@ class Extractor implements ExtractorInterface
             );
         }
 
+        /** @var array{0: float, 1: float, 2: float|null, 3: float|null} $coordinates */
         $coordinates = $point['coordinates'];
 
         if (
@@ -267,22 +281,29 @@ class Extractor implements ExtractorInterface
         return $geometryCollection['geometries'];
     }
 
+    /**
+     * @return array|scalar|null
+     */
     public function convertToArray(mixed $geometry): mixed
     {
+        /** @var array|scalar|object|null $array */
         $array = $geometry;
 
         if (is_string($array)) {
             try {
-                return json_decode($array, true, 512, JSON_THROW_ON_ERROR);
+                /** @var array|scalar|null $array */
+                $array = json_decode($array, true, 512, JSON_THROW_ON_ERROR);
             } catch (Throwable) {
-                return $array;
             }
+
+            return $array;
         }
 
         if (is_object($array)) {
             $array = get_object_vars($array);
         }
 
+        /** @var array|scalar|null $array */
         if (!is_array($array)) {
             return $array;
         }

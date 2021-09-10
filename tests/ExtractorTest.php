@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GeoIO\GeoJSON;
 
 use GeoIO\Dimension;
-use GeoIO\Extractor as ExtractorInterface;
+use GeoIO\GeoJSON\Exception\InvalidGeometryException;
 use GeoIO\GeometryType;
 use PHPUnit\Framework\TestCase;
-use GeoIO\GeoJSON\Exception\InvalidGeometryException;
+use stdClass;
 
 class ExtractorTest extends TestCase
 {
@@ -36,7 +38,7 @@ class ExtractorTest extends TestCase
             'type' => 'GeometryCollection',
         ]));
 
-        $this->assertFalse($extractor->supports(new \stdClass()));
+        $this->assertFalse($extractor->supports(new stdClass()));
         $this->assertFalse($extractor->supports(null));
         $this->assertFalse($extractor->supports('foo'));
     }
@@ -73,7 +75,7 @@ class ExtractorTest extends TestCase
         $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractType(new \stdClass());
+        $extractor->extractType(new stdClass());
     }
 
     public function testExtractTypeThrowsExceptionForInvalidGeometryType(): void
@@ -457,7 +459,7 @@ class ExtractorTest extends TestCase
         $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
-        $extractor->extractDimension(new \stdClass());
+        $extractor->extractDimension(new stdClass());
     }
 
     public function testExtractDimensionThrowsExceptionForInvalidGeometryType(): void
@@ -532,7 +534,6 @@ class ExtractorTest extends TestCase
 
         $this->assertNull($coordinates);
     }
-
 
     public function testExtractCoordinatesfromPointThrowsExceptionForInvalidCoordinates(): void
     {

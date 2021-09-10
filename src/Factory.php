@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GeoIO\GeoJSON;
 
 use GeoIO\Coordinates;
 use GeoIO\CRS;
-use GeoIO\Dimension;
 use GeoIO\Factory as FactoryInterface;
 
 class Factory implements FactoryInterface
@@ -31,6 +32,9 @@ class Factory implements FactoryInterface
         ?int $srid,
         iterable $points,
     ): array {
+        /**
+         * @var iterable<array{coordinates: array}> $points
+         */
         $geometry = [
             'type' => 'LineString',
             'coordinates' => $this->geometriesToCoordinates($points),
@@ -43,6 +47,9 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
+    /**
+     * @param iterable<array{coordinates: array}> $geometries
+     */
     public function createLinearRing(
         string $dimension,
         ?int $srid,
@@ -56,6 +63,9 @@ class Factory implements FactoryInterface
         ?int $srid,
         iterable $lineStrings,
     ): array {
+        /**
+         * @var iterable<array{coordinates: array}> $lineStrings
+         */
         $geometry = [
             'type' => 'Polygon',
             'coordinates' => $this->geometriesToCoordinates($lineStrings),
@@ -73,6 +83,9 @@ class Factory implements FactoryInterface
         ?int $srid,
         iterable $points,
     ): array {
+        /**
+         * @var iterable<array{coordinates: array}> $points
+         */
         $geometry = [
             'type' => 'MultiPoint',
             'coordinates' => $this->geometriesToCoordinates($points),
@@ -90,6 +103,9 @@ class Factory implements FactoryInterface
         ?int $srid,
         iterable $lineStrings,
     ): array {
+        /**
+         * @var iterable<array{coordinates: array}> $lineStrings
+         */
         $geometry = [
             'type' => 'MultiLineString',
             'coordinates' => $this->geometriesToCoordinates($lineStrings),
@@ -109,6 +125,7 @@ class Factory implements FactoryInterface
     ): array {
         $coordinates = [];
 
+        /** @var iterable<array{coordinates: array}> $polygon */
         foreach ($polygons as $polygon) {
             $coordinates[] = $this->geometriesToCoordinates($polygon);
         }
@@ -130,9 +147,16 @@ class Factory implements FactoryInterface
         ?int $srid,
         iterable $geometries,
     ): array {
+        $geos = [];
+
+        /** @var array $geometry */
+        foreach ($geometries as $geometry) {
+            $geos[] = $geometry;
+        }
+
         $geometry = [
             'type' => 'GeometryCollection',
-            'geometries' => $geometries,
+            'geometries' => $geos,
         ];
 
         if (null !== $srid) {
@@ -142,6 +166,9 @@ class Factory implements FactoryInterface
         return $geometry;
     }
 
+    /**
+     * @param iterable<array{coordinates: array}> $geometries
+     */
     private function geometriesToCoordinates(iterable $geometries): array
     {
         $coordinates = [];
