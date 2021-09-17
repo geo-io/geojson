@@ -61,14 +61,14 @@ class Factory implements FactoryInterface
     public function createPolygon(
         string $dimension,
         ?int $srid,
-        iterable $lineStrings,
+        iterable $linearRings,
     ): array {
         /**
-         * @var iterable<array{coordinates: array}> $lineStrings
+         * @var iterable<array{coordinates: array}> $linearRings
          */
         $geometry = [
             'type' => 'Polygon',
-            'coordinates' => $this->geometriesToCoordinates($lineStrings),
+            'coordinates' => $this->geometriesToCoordinates($linearRings),
         ];
 
         if (null !== $srid) {
