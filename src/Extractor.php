@@ -138,7 +138,7 @@ class Extractor implements ExtractorInterface
             );
         }
 
-        return array_map(function ($point) {
+        return array_map(static function ($point) {
             return [
                 'type' => 'Point',
                 'coordinates' => $point,
@@ -160,7 +160,7 @@ class Extractor implements ExtractorInterface
             );
         }
 
-        return array_map(function ($lineString) {
+        return array_map(static function ($lineString) {
             return [
                 'type' => 'LineString',
                 'coordinates' => $lineString,
@@ -182,7 +182,7 @@ class Extractor implements ExtractorInterface
             );
         }
 
-        return array_map(function ($point) {
+        return array_map(static function ($point) {
             return [
                 'type' => 'Point',
                 'coordinates' => $point,
@@ -204,7 +204,7 @@ class Extractor implements ExtractorInterface
             );
         }
 
-        return array_map(function ($lineString) {
+        return array_map(static function ($lineString) {
             return [
                 'type' => 'LineString',
                 'coordinates' => $lineString,
@@ -226,7 +226,7 @@ class Extractor implements ExtractorInterface
             );
         }
 
-        return array_map(function ($polygon) {
+        return array_map(static function ($polygon) {
             return [
                 'type' => 'Polygon',
                 'coordinates' => $polygon,
