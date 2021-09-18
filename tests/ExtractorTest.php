@@ -477,9 +477,6 @@ class ExtractorTest extends TestCase
     {
         $extractor = new Extractor();
 
-        $this->assertNull($extractor->extractSrid('foo'));
-        $this->assertNull($extractor->extractSrid([]));
-
         $json = [
             'type' => 'Point',
             'crs' => [
@@ -505,11 +502,52 @@ class ExtractorTest extends TestCase
         $this->assertEquals(4326, $extractor->extractSrid($json));
     }
 
+    public function testExtractSridReturnsNullForMissingSrid(): void
+    {
+        $extractor = new Extractor();
+
+        $json = [
+            'type' => 'Point',
+        ];
+
+        $this->assertNull($extractor->extractSrid($json));
+    }
+
+    public function testExtractSridThrowsExceptionForInvalidGeometryType(): void
+    {
+        $this->expectException(InvalidGeometryException::class);
+
+        $extractor = new Extractor();
+        $extractor->extractSrid([
+            'type' => 'Invalid',
+        ]);
+    }
+
     public function testExtractCoordinatesFromPoint(): void
     {
         $json = [
             'type' => 'Point',
             'coordinates' => [1, 2, 3, 4],
+        ];
+
+        $extractor = new Extractor();
+
+        $coordinates = $extractor->extractCoordinatesFromPoint($json);
+
+        $this->assertEquals(1, $coordinates->x);
+        $this->assertEquals(2, $coordinates->y);
+        $this->assertEquals(3, $coordinates->z);
+        $this->assertEquals(4, $coordinates->m);
+    }
+
+    public function testExtractCoordinatesFromPointFeature(): void
+    {
+        $json = [
+            'type' => 'Feature',
+            'geometry' => [
+                'type' => 'Point',
+                'coordinates' => [1, 2, 3, 4],
+            ],
         ];
 
         $extractor = new Extractor();
@@ -536,12 +574,24 @@ class ExtractorTest extends TestCase
         $this->assertNull($coordinates);
     }
 
-    public function testExtractCoordinatesfromPointThrowsExceptionForInvalidCoordinates(): void
+    public function testExtractCoordinatesFromPointThrowsExceptionForUnexpectedGeometryType(): void
     {
         $this->expectException(InvalidGeometryException::class);
 
         $extractor = new Extractor();
         $extractor->extractCoordinatesFromPoint([
+            'type' => 'LineString',
+            'coordinates' => [],
+        ]);
+    }
+
+    public function testExtractCoordinatesFromPointThrowsExceptionForInvalidCoordinates(): void
+    {
+        $this->expectException(InvalidGeometryException::class);
+
+        $extractor = new Extractor();
+        $extractor->extractCoordinatesFromPoint([
+            'type' => 'Point',
             'coordinates' => null,
         ]);
     }
@@ -580,6 +630,7 @@ class ExtractorTest extends TestCase
 
         $extractor = new Extractor();
         $extractor->extractPointsFromLineString([
+            'type' => 'LineString',
             'coordinates' => null,
         ]);
     }
@@ -618,6 +669,7 @@ class ExtractorTest extends TestCase
 
         $extractor = new Extractor();
         $extractor->extractLineStringsFromPolygon([
+            'type' => 'Polygon',
             'coordinates' => null,
         ]);
     }
@@ -655,6 +707,7 @@ class ExtractorTest extends TestCase
 
         $extractor = new Extractor();
         $extractor->extractPointsFromMultiPoint([
+            'type' => 'MultiPoint',
             'coordinates' => null,
         ]);
     }
@@ -693,6 +746,7 @@ class ExtractorTest extends TestCase
 
         $extractor = new Extractor();
         $extractor->extractLineStringsFromMultiLineString([
+            'type' => 'MultiLineString',
             'coordinates' => null,
         ]);
     }
@@ -743,6 +797,7 @@ class ExtractorTest extends TestCase
 
         $extractor = new Extractor();
         $extractor->extractPolygonsFromMultiPolygon([
+            'type' => 'MultiPolygon',
             'coordinates' => null,
         ]);
     }
@@ -793,6 +848,7 @@ class ExtractorTest extends TestCase
 
         $extractor = new Extractor();
         $extractor->extractGeometriesFromGeometryCollection([
+            'type' => 'GeometryCollection',
             'geometries' => null,
         ]);
     }
