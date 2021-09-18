@@ -7,6 +7,7 @@ namespace GeoIO\GeoJSON;
 use GeoIO\Dimension;
 use GeoIO\GeoJSON\Exception\InvalidGeometryException;
 use GeoIO\GeometryType;
+use JsonSerializable;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -864,5 +865,50 @@ class ExtractorTest extends TestCase
         ];
 
         $this->assertEquals($expected, $array);
+    }
+
+    public function testTryConvertToArrayConvertsJsonSerializable(): void
+    {
+        $extractor = new Extractor();
+        $array = $extractor->convertToArray(
+            new class() implements JsonSerializable {
+                public function jsonSerialize()
+                {
+                    return [
+                        'type' => 'Point',
+                        'coordinates' => [
+                            1, 1, 1, 1,
+                        ],
+                        'crs' => [
+                            'type' => 'name',
+                            'properties' => [
+                                'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                            ],
+                        ],
+                    ];
+                }
+            }
+        );
+
+        $expected = [
+            'type' => 'Point',
+            'coordinates' => [1, 1, 1, 1],
+            'crs' => [
+                'type' => 'name',
+                'properties' => [
+                    'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, $array);
+    }
+
+    public function testTryConvertToArrayConvertsInvalidJson(): void
+    {
+        $extractor = new Extractor();
+        $array = $extractor->convertToArray('{');
+
+        $this->assertEquals('{', $array);
     }
 }

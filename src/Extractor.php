@@ -10,6 +10,7 @@ use GeoIO\Dimension;
 use GeoIO\Extractor as ExtractorInterface;
 use GeoIO\GeoJSON\Exception\InvalidGeometryException;
 use GeoIO\GeometryType;
+use JsonSerializable;
 use Throwable;
 use function is_array;
 use function is_object;
@@ -290,20 +291,19 @@ class Extractor implements ExtractorInterface
         $array = $geometry;
 
         if (is_string($array)) {
-            try {
-                /** @var array|scalar|null $array */
-                $array = json_decode($array, true, 512, JSON_THROW_ON_ERROR);
-            } catch (Throwable) {
-            }
-
-            return $array;
+            /** @var string|array $array */
+            $array = $this->tryDecodeJson($array);
         }
 
         if (is_object($array)) {
-            $array = get_object_vars($array);
+            if ($array instanceof JsonSerializable) {
+                /** @var array|scalar|null $array */
+                $array = $array->jsonSerialize();
+            } else {
+                $array = get_object_vars($array);
+            }
         }
 
-        /** @var array|scalar|null $array */
         if (!is_array($array)) {
             return $array;
         }
@@ -312,5 +312,27 @@ class Extractor implements ExtractorInterface
             [$this, 'convertToArray'],
             $array
         );
+    }
+
+    private function tryDecodeJson(string $str): mixed
+    {
+        if ('{' !== trim($str[0])) {
+            return $str;
+        }
+
+        $data = $str;
+
+        try {
+            /** @var mixed $decoded */
+            $decoded = json_decode($str, true, 512, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return $str;
+        }
+
+        if (is_array($decoded)) {
+            $data = $decoded;
+        }
+
+        return $data;
     }
 }
