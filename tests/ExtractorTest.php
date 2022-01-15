@@ -928,7 +928,7 @@ class ExtractorTest extends TestCase
         $extractor = new Extractor();
         $array = $extractor->convertToArray(
             new class() implements JsonSerializable {
-                public function jsonSerialize()
+                public function jsonSerialize(): array
                 {
                     return [
                         'type' => 'Point',
