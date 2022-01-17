@@ -29,12 +29,12 @@ class Extractor implements ExtractorInterface
         return true;
     }
 
-    public function extractType(mixed $geometry): string
+    public function extractType(mixed $geometry): GeometryType
     {
         return $this->extractGeometry($geometry)['type'];
     }
 
-    public function extractDimension(mixed $geometry): string
+    public function extractDimension(mixed $geometry): Dimension
     {
         $geometry = $this->extractGeometry($geometry);
 
@@ -95,7 +95,10 @@ class Extractor implements ExtractorInterface
 
     public function extractCoordinatesFromPoint(mixed $point): ?Coordinates
     {
-        $point = $this->extractGeometry($point, 'Point');
+        $point = $this->extractGeometry(
+            $point,
+            GeometryType::POINT
+        );
 
         if (
             !isset($point['coordinates']) ||
@@ -126,7 +129,10 @@ class Extractor implements ExtractorInterface
 
     public function extractPointsFromLineString(mixed $lineString): iterable
     {
-        $lineString = $this->extractGeometry($lineString, 'LineString');
+        $lineString = $this->extractGeometry(
+            $lineString,
+            GeometryType::LINESTRING
+        );
 
         if (
             !isset($lineString['coordinates']) ||
@@ -148,7 +154,10 @@ class Extractor implements ExtractorInterface
 
     public function extractLineStringsFromPolygon(mixed $polygon): iterable
     {
-        $polygon = $this->extractGeometry($polygon, 'Polygon');
+        $polygon = $this->extractGeometry(
+            $polygon,
+            GeometryType::POLYGON
+        );
 
         if (
             !isset($polygon['coordinates']) ||
@@ -170,7 +179,10 @@ class Extractor implements ExtractorInterface
 
     public function extractPointsFromMultiPoint(mixed $multiPoint): iterable
     {
-        $multiPoint = $this->extractGeometry($multiPoint, 'MultiPoint');
+        $multiPoint = $this->extractGeometry(
+            $multiPoint,
+            GeometryType::MULTIPOINT
+        );
 
         if (
             !isset($multiPoint['coordinates']) ||
@@ -192,7 +204,10 @@ class Extractor implements ExtractorInterface
 
     public function extractLineStringsFromMultiLineString(mixed $multiLineString): iterable
     {
-        $multiLineString = $this->extractGeometry($multiLineString, 'MultiLineString');
+        $multiLineString = $this->extractGeometry(
+            $multiLineString,
+            GeometryType::MULTILINESTRING
+        );
 
         if (
             !isset($multiLineString['coordinates']) ||
@@ -214,7 +229,10 @@ class Extractor implements ExtractorInterface
 
     public function extractPolygonsFromMultiPolygon(mixed $multiPolygon): iterable
     {
-        $multiPolygon = $this->extractGeometry($multiPolygon, 'MultiPolygon');
+        $multiPolygon = $this->extractGeometry(
+            $multiPolygon,
+            GeometryType::MULTIPOLYGON
+        );
 
         if (
             !isset($multiPolygon['coordinates']) ||
@@ -236,7 +254,10 @@ class Extractor implements ExtractorInterface
 
     public function extractGeometriesFromGeometryCollection(mixed $geometryCollection): iterable
     {
-        $geometryCollection = $this->extractGeometry($geometryCollection, 'GeometryCollection');
+        $geometryCollection = $this->extractGeometry(
+            $geometryCollection,
+            GeometryType::GEOMETRYCOLLECTION
+        );
 
         if (
             !isset($geometryCollection['geometries']) ||
@@ -284,11 +305,11 @@ class Extractor implements ExtractorInterface
     }
 
     /**
-     * @return array{type: string}
+     * @return array{type: GeometryType}
      */
     private function extractGeometry(
         mixed $geometry,
-        string $expected = null,
+        ?GeometryType $expected = null,
     ): array {
         $geometry = $this->convertToArray($geometry);
 
@@ -299,7 +320,7 @@ class Extractor implements ExtractorInterface
         if (!is_array($geometry)) {
             throw InvalidGeometryException::create(
                 $geometry,
-                $expected ?? 'Geometry',
+                null !== $expected ? $expected->value : 'Geometry'
             );
         }
 
@@ -311,13 +332,16 @@ class Extractor implements ExtractorInterface
             'multilinestring' => GeometryType::MULTILINESTRING,
             'multipolygon' => GeometryType::MULTIPOLYGON,
             'geometrycollection' => GeometryType::GEOMETRYCOLLECTION,
-            default => throw InvalidGeometryException::create($geometry, $expected ?? 'Geometry'),
+            default => throw InvalidGeometryException::create(
+                $geometry,
+                null !== $expected ? $expected->value : 'Geometry'
+            ),
         };
 
         if (null !== $expected && $type !== $expected) {
             throw InvalidGeometryException::create(
                 $geometry,
-                $expected,
+                $expected->value,
             );
         }
 

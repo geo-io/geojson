@@ -6,12 +6,13 @@ namespace GeoIO\GeoJSON;
 
 use GeoIO\Coordinates;
 use GeoIO\CRS;
+use GeoIO\Dimension;
 use GeoIO\Factory as FactoryInterface;
 
 class Factory implements FactoryInterface
 {
     public function createPoint(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         ?Coordinates $coordinates,
     ): array {
@@ -28,7 +29,7 @@ class Factory implements FactoryInterface
     }
 
     public function createLineString(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $points,
     ): array {
@@ -51,7 +52,7 @@ class Factory implements FactoryInterface
      * @param iterable<array{coordinates: array}> $geometries
      */
     public function createLinearRing(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $points,
     ): array {
@@ -59,7 +60,7 @@ class Factory implements FactoryInterface
     }
 
     public function createPolygon(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $linearRings,
     ): array {
@@ -79,7 +80,7 @@ class Factory implements FactoryInterface
     }
 
     public function createMultiPoint(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $points,
     ): array {
@@ -99,7 +100,7 @@ class Factory implements FactoryInterface
     }
 
     public function createMultiLineString(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $lineStrings,
     ): array {
@@ -119,7 +120,7 @@ class Factory implements FactoryInterface
     }
 
     public function createMultiPolygon(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $polygons,
     ): array {
@@ -143,7 +144,7 @@ class Factory implements FactoryInterface
     }
 
     public function createGeometryCollection(
-        string $dimension,
+        Dimension $dimension,
         ?int $srid,
         iterable $geometries,
     ): array {

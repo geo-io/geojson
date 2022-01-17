@@ -92,7 +92,7 @@ class ExtractorTest extends TestCase
     /**
      * @dataProvider extractDimensionProvider
      */
-    public function testExtractDimension(array $geometry, string $expectedDimension): void
+    public function testExtractDimension(array $geometry, Dimension $expectedDimension): void
     {
         $extractor = new Extractor();
 
