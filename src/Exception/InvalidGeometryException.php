@@ -14,8 +14,8 @@ class InvalidGeometryException extends InvalidArgumentException implements Excep
             sprintf(
                 'Expected valid %s object, got %s.',
                 $type,
-                json_encode($value, JSON_THROW_ON_ERROR)
-            )
+                json_encode($value, JSON_THROW_ON_ERROR),
+            ),
         );
     }
 }

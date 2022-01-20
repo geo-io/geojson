@@ -98,7 +98,7 @@ class ExtractorTest extends TestCase
 
         $this->assertEquals(
             $expectedDimension,
-            $extractor->extractDimension($geometry)
+            $extractor->extractDimension($geometry),
         );
     }
 
@@ -869,8 +869,8 @@ class ExtractorTest extends TestCase
                             'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
                         ],
                     ],
-                ]
-            )
+                ],
+            ),
         );
 
         $expected = [
@@ -904,9 +904,9 @@ class ExtractorTest extends TestCase
                                 'name' => 'urn:ogc:def:crs:OGC:1.3:CRS84',
                             ],
                         ],
-                    ]
-                )
-            )
+                    ],
+                ),
+            ),
         );
 
         $expected = [
@@ -943,7 +943,7 @@ class ExtractorTest extends TestCase
                         ],
                     ];
                 }
-            }
+            },
         );
 
         $expected = [
